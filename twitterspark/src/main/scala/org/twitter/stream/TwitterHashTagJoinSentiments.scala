@@ -23,7 +23,7 @@ object TwitterHashTagJoinSentiments {
     }
 
    // val Array(consumerKey, consumerSecret, accessToken, accessTokenSecret) = args.take(4)
-    val filters = Seq("Diego Costa")
+    val filters = Seq("Tati Quebra Barraco")
 
     // Set the system properties so that Twitter4j library used by Twitter stream
     // can use them to generate OAuth credentials
@@ -42,13 +42,18 @@ object TwitterHashTagJoinSentiments {
     val ssc = new StreamingContext(sparkConf, Seconds(10))
     val stream = TwitterUtils.createStream(ssc, None)
     
-     stream.foreachRDD(rdd => {
+    stream.foreachRDD(rdd => {
       println("\nNew tweets %s:".format(rdd.count()))
     })
     
-    val statuses = stream.map(status => status.getText)
-    statuses.print()
-
+    val tweets = stream.map(status => status.getText)
+    tweets.print()
+    
+    tweets.foreachRDD{rdd =>
+      rdd.saveAsTextFile("data/streaming/tweets.txt")
+    }
+   
+    
 
     val hashTags = stream.flatMap(status => status.getText.split(" ").filter(_.startsWith("#")))
 
