@@ -20,8 +20,9 @@ object getHashTag {
       sparkConf.setMaster("local[2]")
     }
 
+    val filters = Seq("Tati Quebra Barraco")
     val ssc = new StreamingContext(sparkConf, Seconds(10))
-    val stream = TwitterUtils.createStream(ssc, None)
+    val stream = TwitterUtils.createStream(ssc, None,filters)
 
     val tweets = stream.filter { t =>
       val tags = t.getText.split(" ")
@@ -40,7 +41,7 @@ object getHashTag {
 
    (status.getText, sentiment.toString, tags)
 }
-    data.foreachRDD{ rdd => rdd.saveAsTextFile("data/streaming/tweets.txt")
+    data.foreachRDD{ rdd => rdd.saveAsTextFile("data/streaming/tweetsSent.txt")
       
     }
     

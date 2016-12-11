@@ -23,7 +23,7 @@ object TwitterHashTagJoinSentiments {
     }
 
    // val Array(consumerKey, consumerSecret, accessToken, accessTokenSecret) = args.take(4)
-    val filters = Seq("Tati Quebra Barraco")
+    val filters = Seq("#PlanetEarth")
 
     // Set the system properties so that Twitter4j library used by Twitter stream
     // can use them to generate OAuth credentials
@@ -40,7 +40,7 @@ object TwitterHashTagJoinSentiments {
     }
 
     val ssc = new StreamingContext(sparkConf, Seconds(10))
-    val stream = TwitterUtils.createStream(ssc, None)
+    val stream = TwitterUtils.createStream(ssc, None, filters)
     
     stream.foreachRDD(rdd => {
       println("\nNew tweets %s:".format(rdd.count()))
@@ -49,11 +49,34 @@ object TwitterHashTagJoinSentiments {
     val tweets = stream.map(status => status.getText)
     tweets.print()
     
-    tweets.foreachRDD{rdd =>
-      rdd.saveAsTextFile("data/streaming/tweets.txt")
-    }
    
+     val sentiment = stream.map(status => SentimentAnalysisUtils.detectSentiment(status.getText))
+     sentiment.print()
+     
+     sentiment.foreachRDD{rdd =>  
+       rdd.saveAsTextFile("data/streaming/sentiment.txt")
+     }
     
+   // sentiment.foreach(println) 
+    
+    tweets.foreachRDD{rdd =>
+      rdd.saveAsTextFile("data/streaming/tweets.txt")  
+    }
+    
+    tweets.saveAsTextFiles("data/streaming/test.txt")
+   
+     var x =tweets.map{t => 
+         (t, SentimentAnalysisUtils.detectSentiment(t).toString())
+       }.reduceByKey(_ + _)
+       
+     x.foreachRDD{rdd => rdd.saveAsTextFile("data/streaming/testeArray.txt") }
+       
+    //  text.flatMap { line => 
+    //    line.split(" ")
+    //  }.map { word =>
+    //    (word,1)
+    //  }.reduceByKey(_ + _)
+    //  .saveAsTextFile("food.count.txt")
 
     val hashTags = stream.flatMap(status => status.getText.split(" ").filter(_.startsWith("#")))
 
