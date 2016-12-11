@@ -6,6 +6,7 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.streaming.twitter.TwitterUtils
+import org.apache.spark.sql.catalyst.expressions.Concat
 
 
 object TwitterHashTagJoinSentiments {
@@ -23,7 +24,7 @@ object TwitterHashTagJoinSentiments {
     }
 
    // val Array(consumerKey, consumerSecret, accessToken, accessTokenSecret) = args.take(4)
-    val filters = Seq("#PlanetEarth")
+  
 
     // Set the system properties so that Twitter4j library used by Twitter stream
     // can use them to generate OAuth credentials
@@ -40,6 +41,18 @@ object TwitterHashTagJoinSentiments {
     }
 
     val ssc = new StreamingContext(sparkConf, Seconds(10))
+    
+    
+     val f = ssc.sparkContext.textFile("filter.txt")
+    
+//val filters = f.map(_.split(' ').map(s => Array(s.toInt)))
+     
+     val fil = f.flatMap { x => Seq(x) }
+
+    val filters = fil.collect().toSeq
+    
+    filters.foreach(x => {println(x)})
+ 
     val stream = TwitterUtils.createStream(ssc, None, filters)
     
     stream.foreachRDD(rdd => {
