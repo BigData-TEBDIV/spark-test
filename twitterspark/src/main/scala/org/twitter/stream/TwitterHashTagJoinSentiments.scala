@@ -83,7 +83,21 @@ object TwitterHashTagJoinSentiments {
        }.reduceByKey(_ + _)
        
      x.foreachRDD{rdd => rdd.saveAsTextFile("data/streaming/testeArray.txt") }
+      
+     val sents = tweets.map(t => (SentimentAnalysisUtils.detectSentiment(t).toString(),1))
+     .reduceByKey((v1, v2) => v1+v2)
+     
+     sents.foreachRDD(rdd => rdd.saveAsTextFile("data/streaming/countSentiment.txt"))
+
+       val words = tweets.flatMap{ t =>
+         t.split(" ")
+       }.map{t => 
+         (t, 1)
+       }.reduceByKey((v1, v2)=> v1+v2)
        
+       words.foreachRDD(rdd => rdd.saveAsTextFile("data/streaming/countWords.txt"))
+       
+     
     //  text.flatMap { line => 
     //    line.split(" ")
     //  }.map { word =>
